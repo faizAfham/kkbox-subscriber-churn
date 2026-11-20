@@ -1,0 +1,2 @@
+# Airflow runs in its own venv so its pins never clash with Spark's
+apache-airflow==3.0.6  # install with the 3.0.6 / py3.12 constraints file, see README

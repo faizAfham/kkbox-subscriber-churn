@@ -1,0 +1,8 @@
+.venv/
+.venv-airflow/
+airflow_home/
+data/
+__pycache__/
+*.log
+metastore_db/
+spark-warehouse/
