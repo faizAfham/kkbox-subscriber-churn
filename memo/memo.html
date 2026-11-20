@@ -1,0 +1,132 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Pricing memo: 149 vs 99</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+@page { size: A4; margin: 25mm 25mm 22mm;
+  @bottom-left { content: "Pricing memo · KKBox subscriptions, March 2017"; font: 8pt Inter, sans-serif; color: #5F6368; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 8pt Inter, sans-serif; color: #5F6368; } }
+html { background: #fff; }
+body { font: 10.5pt/1.5 "Source Serif 4", Georgia, serif; color: #1A1A1A; max-width: 160mm; margin: 0 auto; }
+h1, h2, h3, .kicker, table, .src, .tldr .nums { font-family: Inter, sans-serif; }
+h1 { font-size: 18pt; line-height: 1.25; font-weight: 600; color: #1C4286; margin: 0 0 4pt; }
+h2 { font-size: 12.5pt; font-weight: 600; color: #1C4286; margin: 18pt 0 4pt; break-after: avoid; }
+h3 { font-size: 10.5pt; font-weight: 600; margin: 12pt 0 2pt; break-after: avoid; }
+.kicker { font-size: 8.5pt; color: #5F6368; margin-bottom: 14pt; }
+p { margin: 0 0 7pt; } ul, ol { margin: 0 0 7pt; padding-left: 16pt; } li { margin-bottom: 3pt; }
+.tldr { border-left: 3pt solid #1C4286; background: #F3F6FB; padding: 9pt 12pt; margin: 0 0 12pt; }
+.tldr p { margin: 0 0 5pt; }
+.nums { display: flex; gap: 10pt; margin: 10pt 0 2pt; }
+.nums div { flex: 1; background: #fff; border: 0.5pt solid #D5DAE3; padding: 6pt 8pt; }
+.nums b { display: block; font-size: 15pt; color: #1C4286; font-variant-numeric: tabular-nums; }
+.nums span { font-size: 8pt; color: #5F6368; line-height: 1.3; display: block; }
+figure { margin: 10pt 0 12pt; break-inside: avoid; }
+figcaption { font: 600 9.5pt/1.35 Inter, sans-serif; margin-bottom: 6pt; }
+figcaption .ex { color: #BB7125; }
+.src { font-size: 7.5pt; color: #5F6368; margin-top: 4pt; }
+table { border-collapse: collapse; width: 100%; font-size: 8.5pt; margin: 4pt 0 2pt; font-variant-numeric: tabular-nums; break-inside: avoid; }
+th { text-align: left; font-weight: 600; border-bottom: 1pt solid #1A1A1A; padding: 3pt 5pt; }
+td { border-bottom: 0.5pt solid #E3E6EA; padding: 3pt 5pt; }
+.ci { color: #5F6368; font-size: 7.5pt; }
+.rule { border: 0.5pt solid #D5DAE3; padding: 8pt 11pt; margin: 6pt 0 10pt; font-size: 10pt; }
+.pb { break-before: page; }
+</style></head><body>
+
+<div class="kicker">Analysis memo · Mohammad Faiz Ahmad · November 2026 · Data: KKBox (WSDM Cup 2018), 531,743 subscribers</div>
+<h1>Keep monthly subscribers on 149, and test it on new sign-ups: it earns TWD 410 more a year than 99, and churn would have to almost triple to erase that</h1>
+
+<div class="tldr">
+<p><b>Question.</b> Monthly subscribers paying TWD 149 churn more than those paying 99. Does the higher price still earn more per subscriber over a year?</p>
+<p><b>Answer.</b> Yes, by a wide margin. Among 531,743 comparable subscribers, 149 churns 3.43% a month against 1.81% for 99, but earns TWD 1,486 a year against 1,076. Churn at 149 would have to reach 9.86% before 99 earns more.</p>
+<p><b>Recommendation.</b> This comparison is observational, so it can't tell us how <i>new</i> users react to 149. Run a price test on new monthly sign-ups: about 22,254 users per arm over three billing cycles, with cancellations, downgrades and sign-up conversion as guardrails.</p>
+<div class="nums">
+<div><b>+TWD 410</b><span>12-month revenue per subscriber, 149 vs 99 (95% CI 401–418)</span></div>
+<div><b>9.86%</b><span>monthly churn at which 149 stops paying (today 3.43%)</span></div>
+<div><b>22,254</b><span>users per arm to detect a 0.5-point churn rise</span></div>
+</div></div>
+
+<h2>1. Context</h2>
+<p>Every subscription business that raises a price faces the same trade: more revenue from each person who stays, against more people who leave. A pricing team needs one number that weighs the two, and a threshold for when the trade stops paying. This memo produces both for KKBox, a Taiwanese music-streaming service that released real, anonymised subscriber data for the WSDM Cup 2018 churn challenge.</p>
+<p>KKBox sells monthly plans at TWD 99, 100, 129, 149 and 180. In March 2017 the label tells us which subscribers did not renew within 30 days of their plan expiring. That is the definition of churn used throughout.</p>
+
+<h2>2. Goals and non-goals</h2>
+<p><b>Goals.</b> Estimate how churn differs by price for comparable subscribers; turn that into 12-month revenue per subscriber; decide, with a rule set in advance, whether 149 pays; and design the test that would confirm it.</p>
+<p><b>Non-goals.</b> Predicting which individual will churn (a modelling problem, not a pricing decision); setting the optimal price (this data has five prices, not a demand curve); and anything about the 180 tier, which is sold through different payment methods and can't be compared fairly (section 6).</p>
+
+<h2>3. Who is counted</h2>
+<p>Each filter below is a judgment call that changes the answer, so each one is listed with its reason. The price of a subscriber is the list price of the plan that expires in March, taken from their last payment on or before 28 February. I didn't use the March payment, because that payment is often the renewal itself: anyone who has one is, by construction, not a churner, so pricing by it would leak the outcome.</p>
+<figure><figcaption><span class="ex">Exhibit 1.</span> From 970,960 labelled users to a cohort of 531,743 comparable monthly subscribers</figcaption>
+<table><tr><th>#</th><th>Rule</th><th>Users left</th><th>Why</th></tr><tr><td>0</td><td>Users with the official churn label</td><td>970,960</td><td>starting point</td></tr><tr><td>1</td><td>Has a subscription to price (valid payment on or before 28 Feb)</td><td>968,436</td><td>nothing to price otherwise</td></tr><tr><td>2</td><td>30-day plan</td><td>942,176</td><td>long plans are a different product</td></tr><tr><td>3</td><td>Auto-renew on</td><td>853,899</td><td>the decision is about automatic renewals</td></tr><tr><td>4</td><td>Price is 99, 100, 129, 149 or 180</td><td>853,555</td><td>the tiers being compared</td></tr><tr><td>5</td><td>Payment method 41</td><td>543,671</td><td>the only method that carries every tier</td></tr><tr><td>6</td><td>Subscription expires in March 2017</td><td>531,743</td><td>the month the label covers</td></tr></table>
+<div class="src">Source: KKBox train_v2, transactions, transactions_v2 (Kaggle). Ledger of 22,975,416 payments after removing 3,339 exact duplicates. Seven automated data checks pass.</div></figure>
+
+<h2>4. How it is measured, and the rule written before the results</h2>
+<ul>
+<li><b>Churn rate</b> = subscribers with <code>is_churn = 1</code> ÷ subscribers in the tier. Unit: a person, not a payment.</li>
+<li><b>12-month revenue per starting subscriber</b> = p × (1 − (1 − c)<sup>12</sup>) ÷ c, where p is the monthly price and c the monthly churn rate. It is the sum of 12 monthly payments, each a little less likely than the last. It assumes churn stays constant.</li>
+<li><b>Break-even churn</b> = the churn rate at which 149's revenue equals 99's revenue today.</li>
+<li><b>Guardrails</b>: March cancellation rate, and the share who renewed at a lower price (downgrades).</li>
+</ul>
+<div class="rule"><b>Decision rule (committed to git on 20 Nov 2026, before any churn rate was computed).</b> If 149 earns more than 99, the 95% interval of the gap is above zero, and 149's churn is at least 1 point below break-even: propose a price test that moves new subscribers to 149. If the interval includes zero or the margin is under 1 point: too close to call, so run the test first. If 149 earns less: don't raise the price.</div>
+
+<h2>5. Findings</h2>
+<h3>149 churns about twice as often as 99, but the gap is less than 2 points</h3>
+<figure><figcaption><span class="ex">Exhibit 2.</span> Monthly churn by price, payment method 41 only (bars = rate, lines = 95% Wilson interval)</figcaption>
+<svg viewBox="0 0 560 114" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif" font-size="11"><text x="112" y="19.0" text-anchor="end" fill="#1A1A1A">TWD 99</text><rect x="120" y="6" width="169.3" height="18" rx="3" fill="#2A55A6"/><line x1="285.3" x2="293.5" y1="15.0" y2="15.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="299.5" y="19.0" fill="#1A1A1A">1.81%</text><text x="112" y="45.0" text-anchor="end" fill="#1A1A1A">TWD 100</text><rect x="120" y="32" width="57.7" height="18" rx="3" fill="#2A55A6"/><line x1="169.3" x2="187.5" y1="41.0" y2="41.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="193.5" y="45.0" fill="#1A1A1A">0.62%</text><text x="112" y="71.0" text-anchor="end" fill="#1A1A1A">TWD 129</text><rect x="120" y="58" width="276.2" height="18" rx="3" fill="#2A55A6"/><line x1="378.5" x2="415.0" y1="67.0" y2="67.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="421.0" y="71.0" fill="#1A1A1A">2.96%</text><text x="112" y="97.0" text-anchor="end" fill="#1A1A1A">TWD 149</text><rect x="120" y="84" width="320.6" height="18" rx="3" fill="#BB7125"/><line x1="431.0" x2="450.4" y1="93.0" y2="93.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="456.4" y="97.0" fill="#1A1A1A">3.43%</text><line x1="120" x2="120" y1="0" y2="110" stroke="#C0C5C9"/></svg>
+<table><tr><th>Price (TWD)</th><th>Users</th><th>Churn (95% CI)</th><th>Cancelled</th><th>Downgraded</th><th>Revenue, 12 m</th></tr><tr><td>99</td><td>360,805</td><td>1.81% <span class='ci'>(1.77%–1.86%)</span></td><td>2.20%</td><td>0.01%</td><td><b>1,076</b></td></tr><tr><td>100</td><td>24,761</td><td>0.62% <span class='ci'>(0.53%–0.72%)</span></td><td>0.39%</td><td>0.08%</td><td><b>1,160</b></td></tr><tr><td>129</td><td>28,901</td><td>2.96% <span class='ci'>(2.77%–3.16%)</span></td><td>3.76%</td><td>2.09%</td><td><b>1,319</b></td></tr><tr><td>149</td><td>117,276</td><td>3.43% <span class='ci'>(3.33%–3.54%)</span></td><td>5.19%</td><td>2.66%</td><td><b>1,486</b></td></tr></table>
+<div class="src">Source: kkbox-pricing-analysis notebook, results/tier_table.csv.</div></figure>
+<p>Two things stand out. First, the 100 tier churns least of all (0.62%). An earlier pass on a truncated copy of the data, using cancellations as a stand-in for churn, had suggested the opposite; with the full data and the real label, that finding reversed. Second, the guardrails move with churn: at 149, 5.2% cancelled and 2.7% downgraded, against 2.2% and 0.01% at 99. A real price rise would need to watch both.</p>
+
+<h3>Price still wins: 149 would need 9.86% churn before 99 earns more</h3>
+<figure><figcaption><span class="ex">Exhibit 3.</span> 12-month revenue per subscriber at 149 falls as churn rises, but stays above 99 until churn reaches 9.86%</figcaption>
+<svg viewBox="0 0 560 230" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif" font-size="11"><line x1="52" x2="544" y1="196.0" y2="196.0" stroke="#ECEDEF"/><text x="46" y="200.0" text-anchor="end" fill="#5F6368">600</text><line x1="52" x2="544" y1="150.5" y2="150.5" stroke="#ECEDEF"/><text x="46" y="154.5" text-anchor="end" fill="#5F6368">900</text><line x1="52" x2="544" y1="105.0" y2="105.0" stroke="#ECEDEF"/><text x="46" y="109.0" text-anchor="end" fill="#5F6368">1,200</text><line x1="52" x2="544" y1="59.5" y2="59.5" stroke="#ECEDEF"/><text x="46" y="63.5" text-anchor="end" fill="#5F6368">1,500</text><line x1="52" x2="544" y1="14.0" y2="14.0" stroke="#ECEDEF"/><text x="46" y="18.0" text-anchor="end" fill="#5F6368">1,800</text><text x="52.0" y="212" text-anchor="middle" fill="#5F6368">0%</text><text x="122.3" y="212" text-anchor="middle" fill="#5F6368">2%</text><text x="192.6" y="212" text-anchor="middle" fill="#5F6368">4%</text><text x="262.9" y="212" text-anchor="middle" fill="#5F6368">6%</text><text x="333.1" y="212" text-anchor="middle" fill="#5F6368">8%</text><text x="403.4" y="212" text-anchor="middle" fill="#5F6368">10%</text><text x="473.7" y="212" text-anchor="middle" fill="#5F6368">12%</text><text x="544.0" y="212" text-anchor="middle" fill="#5F6368">14%</text><text x="298.0" y="226" text-anchor="middle" fill="#5F6368">monthly churn at 149</text><line x1="52" x2="544" y1="123.8" y2="123.8" stroke="#00978D" stroke-width="2" stroke-dasharray="5 4"/><text x="544" y="117.8" text-anchor="end" fill="#1A1A1A">99 today: TWD 1,076</text><polyline points="69.6,23.2 76.6,26.0 83.6,28.8 90.7,31.6 97.7,34.4 104.7,37.1 111.7,39.8 118.8,42.4 125.8,45.0 132.8,47.6 139.9,50.2 146.9,52.7 153.9,55.2 160.9,57.6 168.0,60.0 175.0,62.4 182.0,64.7 189.1,67.1 196.1,69.3 203.1,71.6 210.1,73.8 217.2,76.0 224.2,78.2 231.2,80.3 238.3,82.4 245.3,84.5 252.3,86.6 259.3,88.6 266.4,90.6 273.4,92.6 280.4,94.5 287.5,96.5 294.5,98.4 301.5,100.2 308.5,102.1 315.6,103.9 322.6,105.7 329.6,107.5 336.7,109.3 343.7,111.0 350.7,112.7 357.7,114.4 364.8,116.1 371.8,117.7 378.8,119.3 385.9,120.9 392.9,122.5 399.9,124.1 406.9,125.6 414.0,127.1 421.0,128.6 428.0,130.1 435.1,131.6 442.1,133.0 449.1,134.4 456.1,135.9 463.2,137.2 470.2,138.6 477.2,140.0 484.3,141.3 491.3,142.6 498.3,143.9 505.3,145.2 512.4,146.5 519.4,147.7 526.4,149.0 533.5,150.2 540.5,151.4" fill="none" stroke="#2A55A6" stroke-width="2"/><circle cx="172.7" cy="61.6" r="5" fill="#BB7125" stroke="#fff" stroke-width="2"/><text x="181.7" y="53.6" fill="#1A1A1A">149 today: 3.4% churn, TWD 1,486</text><line x1="398.5" x2="398.5" y1="14" y2="196" stroke="#1A1A1A" stroke-width="1" stroke-dasharray="2 3"/><text x="403.5" y="26" fill="#1A1A1A">break-even 9.86%</text></svg>
+<div class="src">Revenue = p × (1 − (1 − c)<sup>12</sup>) ÷ c. Bootstrap (10,000 draws) 95% CI of the gap: TWD 401–418.</div></figure>
+<p>Under the committed rule the verdict is outcome 1: <b>149 pays</b>. The gap is TWD 410 per subscriber per year, its interval is nowhere near zero, and the margin to break-even is 6.4 points against the 1 point the rule asks for.</p>
+
+<h2>6. Is it really the price?</h2>
+<h3>Payment method had to be held fixed first</h3>
+<p>Price is tangled up with how people pay. The 180 tier is sold only through methods that never carry 99, so a 180-vs-99 comparison would mostly compare payment channels. Payment method 41 is the only one that carries every tier from 99 to 149, which is why the cohort is limited to it. Exhibit 4 shows how much the method alone matters: at the same 149 price, churn runs from 0.9% to 53.9%.</p>
+<figure><figcaption><span class="ex">Exhibit 4.</span> Same price, very different churn: monthly churn at TWD 149 by payment method (methods with at least 1,000 users)</figcaption>
+<svg viewBox="0 0 560 270" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif" font-size="11"><text x="82" y="19.0" text-anchor="end" fill="#1A1A1A">method 31</text><rect x="90" y="6" width="5.9" height="18" rx="3" fill="#2A55A6"/><line x1="94.8" x2="97.2" y1="15.0" y2="15.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="103.2" y="19.0" fill="#1A1A1A">0.9%</text><text x="82" y="45.0" text-anchor="end" fill="#1A1A1A">method 34</text><rect x="90" y="32" width="6.1" height="18" rx="3" fill="#2A55A6"/><line x1="95.4" x2="96.8" y1="41.0" y2="41.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="102.8" y="45.0" fill="#1A1A1A">1.0%</text><text x="82" y="71.0" text-anchor="end" fill="#1A1A1A">method 23</text><rect x="90" y="58" width="10.6" height="18" rx="3" fill="#2A55A6"/><line x1="97.3" x2="105.4" y1="67.0" y2="67.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="111.4" y="71.0" fill="#1A1A1A">1.7%</text><text x="82" y="97.0" text-anchor="end" fill="#1A1A1A">method 37</text><rect x="90" y="84" width="16.1" height="18" rx="3" fill="#2A55A6"/><line x1="105.1" x2="107.2" y1="93.0" y2="93.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="113.2" y="97.0" fill="#1A1A1A">2.5%</text><text x="82" y="123.0" text-anchor="end" fill="#1A1A1A">method 33</text><rect x="90" y="110" width="16.6" height="18" rx="3" fill="#2A55A6"/><line x1="104.9" x2="108.4" y1="119.0" y2="119.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="114.4" y="123.0" fill="#1A1A1A">2.6%</text><text x="82" y="149.0" text-anchor="end" fill="#1A1A1A">method 27</text><rect x="90" y="136" width="18.4" height="18" rx="3" fill="#2A55A6"/><line x1="103.9" x2="114.2" y1="145.0" y2="145.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="120.2" y="149.0" fill="#1A1A1A">2.9%</text><text x="82" y="175.0" text-anchor="end" fill="#1A1A1A">method 41</text><rect x="90" y="162" width="21.8" height="18" rx="3" fill="#2A55A6"/><line x1="111.2" x2="112.5" y1="171.0" y2="171.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="118.5" y="175.0" fill="#1A1A1A">3.4%</text><text x="82" y="201.0" text-anchor="end" fill="#1A1A1A">method 40</text><rect x="90" y="188" width="37.2" height="18" rx="3" fill="#2A55A6"/><line x1="126.1" x2="128.3" y1="197.0" y2="197.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="134.3" y="201.0" fill="#1A1A1A">5.8%</text><text x="82" y="227.0" text-anchor="end" fill="#1A1A1A">method 30</text><rect x="90" y="214" width="88.0" height="18" rx="3" fill="#2A55A6"/><line x1="172.9" x2="183.3" y1="223.0" y2="223.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="189.3" y="227.0" fill="#1A1A1A">13.8%</text><text x="82" y="253.0" text-anchor="end" fill="#1A1A1A">method 39</text><rect x="90" y="240" width="343.1" height="18" rx="3" fill="#BB7125"/><line x1="419.5" x2="446.5" y1="249.0" y2="249.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="452.5" y="253.0" fill="#1A1A1A">53.9%</text><line x1="90" x2="90" y1="0" y2="266" stroke="#C0C5C9"/></svg><div class="src">All payment methods, 30-day auto-renew plans expiring in March 2017. Source: results/pm149_table.csv.</div></figure>
+
+<h3>Tenure doesn't explain the gap</h3>
+<p>Longer-standing subscribers churn less, and 149 users are more often long-standing, so tenure could have been hiding behind price. It isn't. Within tenure bands the gap is 1.66 points against 1.62 overall, and the Mantel-Haenszel odds ratio pooled across bands is 2.07 (95% CI 1.97–2.17). The gap is no smaller in any band.</p>
+<figure><figcaption><span class="ex">Exhibit 5.</span> Within every tenure band, 149 (blue) churns more than 99 (green)</figcaption>
+<svg viewBox="0 0 560 166" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif" font-size="11"><text x="142" y="19.0" text-anchor="end" fill="#1A1A1A">under 1 year · 99</text><rect x="150" y="6" width="134.2" height="18" rx="3" fill="#00978D"/><line x1="279.3" x2="289.2" y1="15.0" y2="15.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="295.2" y="19.0" fill="#1A1A1A">1.9%</text><text x="142" y="45.0" text-anchor="end" fill="#1A1A1A">under 1 year · 149</text><rect x="150" y="32" width="283.1" height="18" rx="3" fill="#2A55A6"/><line x1="413.4" x2="454.3" y1="41.0" y2="41.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="460.3" y="45.0" fill="#1A1A1A">4.1%</text><text x="142" y="71.0" text-anchor="end" fill="#1A1A1A">1–2 years · 99</text><rect x="150" y="58" width="127.8" height="18" rx="3" fill="#00978D"/><line x1="273.5" x2="282.4" y1="67.0" y2="67.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="288.4" y="71.0" fill="#1A1A1A">1.8%</text><text x="142" y="97.0" text-anchor="end" fill="#1A1A1A">1–2 years · 149</text><rect x="150" y="84" width="199.2" height="18" rx="3" fill="#2A55A6"/><line x1="335.3" x2="364.1" y1="93.0" y2="93.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="370.1" y="97.0" fill="#1A1A1A">2.8%</text><text x="142" y="123.0" text-anchor="end" fill="#1A1A1A">over 2 years · 99</text><rect x="150" y="110" width="99.5" height="18" rx="3" fill="#00978D"/><line x1="242.1" x2="257.4" y1="119.0" y2="119.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="263.4" y="123.0" fill="#1A1A1A">1.4%</text><text x="142" y="149.0" text-anchor="end" fill="#1A1A1A">over 2 years · 149</text><rect x="150" y="136" width="243.7" height="18" rx="3" fill="#2A55A6"/><line x1="384.7" x2="403.1" y1="145.0" y2="145.0" stroke="#1A1A1A" stroke-width="1.5"/><text x="409.1" y="149.0" fill="#1A1A1A">3.5%</text><line x1="150" x2="150" y1="0" y2="162" stroke="#C0C5C9"/></svg><div class="src">Tenure = days from first recorded payment (from Jan 2015) to the expiring payment.</div></figure>
+
+<h3>People whose price went up don't change the verdict</h3>
+<p>The rule named one result that would change my mind: users whose price rose churning above break-even. 2,469 users had a higher price on their expiring plan than on their previous one. Most of these moved from 99 to 100, so the useful group is the 908 who moved up to 149. They churn at 5.3%, above 149's average of 3.43% (a price-shock effect), but far below the 9.86% break-even.</p>
+
+<h2>7. How sure is the verdict?</h2>
+<p>I stressed the two inputs most likely to be wrong: churn at 149, and the price itself (list price versus what people actually paid).</p>
+<figure><figcaption><span class="ex">Exhibit 6.</span> The verdict survives 3 extra points of churn at 149 and the switch to the amount actually paid</figcaption>
+<table><tr><th>Price basis</th><th>Churn at 149</th><th>Revenue at 149</th><th>Gap vs 99</th><th>Margin to break-even (pts)</th><th>Still pays?</th></tr><tr><td>list price</td><td>3.43%</td><td>1,486</td><td>410</td><td>6.4</td><td>yes</td></tr><tr><td>list price</td><td>4.43%</td><td>1,410</td><td>334</td><td>5.4</td><td>yes</td></tr><tr><td>list price</td><td>5.43%</td><td>1,340</td><td>263</td><td>4.4</td><td>yes</td></tr><tr><td>list price</td><td>6.43%</td><td>1,273</td><td>197</td><td>3.4</td><td>yes</td></tr><tr><td>actually paid</td><td>3.43%</td><td>1,485</td><td>409</td><td>6.4</td><td>yes</td></tr><tr><td>actually paid</td><td>4.43%</td><td>1,409</td><td>333</td><td>5.4</td><td>yes</td></tr><tr><td>actually paid</td><td>5.43%</td><td>1,339</td><td>262</td><td>4.4</td><td>yes</td></tr><tr><td>actually paid</td><td>6.43%</td><td>1,272</td><td>196</td><td>3.4</td><td>yes</td></tr></table>
+<div class="src">99's revenue held at TWD 1,076. Source: results/sensitivity.csv.</div></figure>
+
+<h2>8. Recommendation and the test</h2>
+<p><b>Keep existing monthly subscribers on 149, and test 149 against 99 for new monthly sign-ups.</b> The existing-user data says 149 pays, but these users chose their price, so the data can't show how a new user facing 149 instead of 99 would behave, or whether they would sign up at all. A test answers that.</p>
+<ul>
+<li><b>Who:</b> new monthly sign-ups on payment method 41, randomly assigned at the offer screen to 99 or 149.</li>
+<li><b>Primary metric:</b> revenue per assigned user over three billing cycles. Everyone assigned counts, including those who never convert.</li>
+<li><b>Guardrails:</b> sign-up conversion, churn at each renewal, cancellations, downgrades, support contacts.</li>
+<li><b>Size:</b> 22,254 users per arm to detect churn moving from 3.43% to 3.93% at 80% power, α = 0.05.</li>
+<li><b>Duration:</b> at least three billing cycles, because the first renewal after a price change is when the price-shock effect shows up.</li>
+<li><b>Ship rule, set now:</b> ship 149 if revenue per assigned user is higher with a 95% interval above zero and no guardrail worsens by more than 1 point.</li>
+</ul>
+
+<h2>9. A side finding worth a call: payment method 39</h2>
+<p>At 149, subscribers paying through method 39 churn at 53.9%, against 3.8% on other methods. It doesn't look like a promotion ending: they are long-standing (median tenure 734 days), they paid full price, and their volume was steady through February. What stands out is that they rarely cancel (0.9% against 4.5%), and of the 1,018 who did renew, 490 (48%) switched to a different payment method. People who leave without cancelling, while those who stay change how they pay, is the pattern of <b>involuntary churn</b>: failed charges, or a method being withdrawn. KKBox doesn't document what method 39 is, so this is a question for the payments team, not a conclusion. If it is a billing failure, the roughly 1,141 who churned would have been worth about TWD 1,695,690 a year at 149's revenue per subscriber.</p>
+
+<h2>10. Risks, limits, and what would change my mind</h2>
+<ul>
+<li><b>Observational data.</b> Users picked their tier. The test in section 8 is the fix.</li>
+<li><b>One renewal month.</b> The constant-churn assumption turns one month into a year. If churn at 149 rises over time, the margin shrinks; section 7 shows how far it can rise.</li>
+<li><b>Listening is concurrent, not predictive.</b> Churn falls from 3.30% with no listening logs to 0.72% for those who listened 24–31 days in March, but that is measured in the renewal month itself, so it describes churners rather than predicting them.</li>
+<li><b>Music, not video.</b> KKBox is a Taiwanese music service in 2017. The method transfers to a video service; the numbers don't.</li>
+<li><b>Age and gender</b> are valid for only 12% of the cohort, so I didn't use them.</li>
+<li><b>What would change my mind:</b> a test where sign-up conversion at 149 falls by more than the revenue gain, or churn at 149 rising toward 9.9% over later renewals.</li>
+</ul>
+
+<h2>Appendix: reproduce every number</h2>
+<p>Pipeline and notebooks: <code>subscriber-movements/</code>. Data never leaves Kaggle. Run, in order, the notebooks <code>kkbox-to-parquet</code> → <code>kkbox-pricing-mart</code> → <code>kkbox-pricing-analysis</code> → <code>kkbox-pricing-extras</code>; download their outputs into <code>analysis/results/</code>; then run <code>python memo/build_memo.py</code>, which builds this document from those files. The decision rule is <code>analysis/decision_rule.md</code>, committed before the analysis.</p>
+<p class="src">Data: KKBox Churn Prediction Challenge, WSDM Cup 2018, kaggle.com/c/kkbox-churn-prediction-challenge. Method references: Wilson score interval; Mantel-Haenszel pooled odds ratio; two-proportion power analysis (statsmodels).</p>
+</body></html>
