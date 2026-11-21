@@ -1,0 +1,465 @@
+{
+  "dq": {
+    "expiring_row_is_a_cancel": 3406,
+    "base_users": 760163
+  },
+  "A_breakdown": {
+    "auto_renew=0": {
+      "users": 83200,
+      "churn": 0.27105769230769233,
+      "churn_cancel": 0.0005528846153846154,
+      "churn_silent": 0.27050480769230767,
+      "silent_share": 0.9979602695991486
+    },
+    "auto_renew=1": {
+      "users": 760475,
+      "churn": 0.02974062263716756,
+      "churn_cancel": 0.023844307833919588,
+      "churn_silent": 0.00589631480324797,
+      "silent_share": 0.19825794756156873
+    },
+    "base (auto-renew, paid, tier)": {
+      "users": 760163,
+      "churn": 0.029714679614766832,
+      "churn_cancel": 0.023817260245499978,
+      "churn_silent": 0.005897419369266855,
+      "silent_share": 0.19846821321055427
+    },
+    "base, price 99.0": {
+      "users": 360805,
+      "churn": 0.018139992516733417,
+      "churn_cancel": 0.017081248874045538,
+      "churn_silent": 0.0010587436426878784,
+      "silent_share": 0.05836516424751719
+    },
+    "base, price 100.0": {
+      "users": 27223,
+      "churn": 0.007640598023729934,
+      "churn_cancel": 0.0057671821621423066,
+      "churn_silent": 0.001873415861587628,
+      "silent_share": 0.24519230769230768
+    },
+    "base, price 129.0": {
+      "users": 33868,
+      "churn": 0.03876815873390811,
+      "churn_cancel": 0.020520845635998583,
+      "churn_silent": 0.018247313097909532,
+      "silent_share": 0.4706778370144707
+    },
+    "base, price 149.0": {
+      "users": 286186,
+      "churn": 0.04176654343678587,
+      "churn_cancel": 0.03129083882509976,
+      "churn_silent": 0.010475704611686107,
+      "silent_share": 0.25081569480465155
+    },
+    "base, price 180.0": {
+      "users": 52081,
+      "churn": 0.04932700985004128,
+      "churn_cancel": 0.04099383652387627,
+      "churn_silent": 0.008333173326165013,
+      "silent_share": 0.16893732970027248
+    }
+  },
+  "B_payment": {
+    "avg_silent": 0.005897419369266855,
+    "at_risk_methods": [
+      40.0,
+      30.0,
+      29.0
+    ],
+    "table": {
+      "40.0": {
+        "users": 70146.0,
+        "churn": 0.0584,
+        "churn_cancel": 0.0336,
+        "churn_silent": 0.0248,
+        "renewers_with_march_tx": 65882.0,
+        "renewers_switched_method": 0.0141,
+        "mean_list_price": 149.0,
+        "tenure_median_days": 751.0,
+        "march_volume_index": 0.9608,
+        "silent_vs_avg": 4.2134
+      },
+      "30.0": {
+        "users": 14336.0,
+        "churn": 0.1025,
+        "churn_cancel": 0.0822,
+        "churn_silent": 0.0203,
+        "renewers_with_march_tx": 12846.0,
+        "renewers_switched_method": 0.003,
+        "mean_list_price": 133.6653,
+        "tenure_median_days": 153.0,
+        "march_volume_index": 1.0431,
+        "silent_vs_avg": 3.4419
+      },
+      "29.0": {
+        "users": 7997.0,
+        "churn": 0.0779,
+        "churn_cancel": 0.0606,
+        "churn_silent": 0.0173,
+        "renewers_with_march_tx": 7356.0,
+        "renewers_switched_method": 0.0141,
+        "mean_list_price": 180.0,
+        "tenure_median_days": 154.0,
+        "march_volume_index": 1.2277,
+        "silent_vs_avg": 2.9261
+      },
+      "36.0": {
+        "users": 44084.0,
+        "churn": 0.0441,
+        "churn_cancel": 0.0374,
+        "churn_silent": 0.0067,
+        "renewers_with_march_tx": 41942.0,
+        "renewers_switched_method": 0.0071,
+        "mean_list_price": 180.0,
+        "tenure_median_days": 500.0,
+        "march_volume_index": 1.1815,
+        "silent_vs_avg": 1.1385
+      },
+      "27.0": {
+        "users": 1664.0,
+        "churn": 0.0288,
+        "churn_cancel": 0.0252,
+        "churn_silent": 0.0036,
+        "renewers_with_march_tx": 1606.0,
+        "renewers_switched_method": 0.0268,
+        "mean_list_price": 149.0,
+        "tenure_median_days": 754.0,
+        "march_volume_index": 0.9487,
+        "silent_vs_avg": 0.6114
+      },
+      "41.0": {
+        "users": 531743.0,
+        "churn": 0.0218,
+        "churn_cancel": 0.0182,
+        "churn_silent": 0.0036,
+        "renewers_with_march_tx": 519936.0,
+        "renewers_switched_method": 0.001,
+        "mean_list_price": 111.7046,
+        "tenure_median_days": 457.0,
+        "march_volume_index": 1.0018,
+        "silent_vs_avg": 0.6024
+      },
+      "37.0": {
+        "users": 33974.0,
+        "churn": 0.0254,
+        "churn_cancel": 0.0222,
+        "churn_silent": 0.0032,
+        "renewers_with_march_tx": 33049.0,
+        "renewers_switched_method": 0.0088,
+        "mean_list_price": 149.0,
+        "tenure_median_days": 763.0,
+        "march_volume_index": 0.9617,
+        "silent_vs_avg": 0.544
+      },
+      "23.0": {
+        "users": 1624.0,
+        "churn": 0.0166,
+        "churn_cancel": 0.0154,
+        "churn_silent": 0.0012,
+        "renewers_with_march_tx": 1596.0,
+        "renewers_switched_method": 0.0025,
+        "mean_list_price": 148.9138,
+        "tenure_median_days": 669.0,
+        "march_volume_index": 1.0201,
+        "silent_vs_avg": 0.2088
+      },
+      "39.0": {
+        "users": 2116.0,
+        "churn": 0.5392,
+        "churn_cancel": 0.5388,
+        "churn_silent": 0.0005,
+        "renewers_with_march_tx": 904.0,
+        "renewers_switched_method": 0.4657,
+        "mean_list_price": 149.0,
+        "tenure_median_days": 734.0,
+        "march_volume_index": 0.9545,
+        "silent_vs_avg": 0.0801
+      },
+      "33.0": {
+        "users": 12675.0,
+        "churn": 0.026,
+        "churn_cancel": 0.026,
+        "churn_silent": 0.0001,
+        "renewers_with_march_tx": 12339.0,
+        "renewers_switched_method": 0.0061,
+        "mean_list_price": 149.0,
+        "tenure_median_days": 700.0,
+        "march_volume_index": 0.9487,
+        "silent_vs_avg": 0.0134
+      },
+      "34.0": {
+        "users": 27813.0,
+        "churn": 0.0095,
+        "churn_cancel": 0.0095,
+        "churn_silent": 0.0,
+        "renewers_with_march_tx": 27534.0,
+        "renewers_switched_method": 0.0022,
+        "mean_list_price": 149.0,
+        "tenure_median_days": 700.0,
+        "march_volume_index": 0.958,
+        "silent_vs_avg": 0.0
+      },
+      "31.0": {
+        "users": 9660.0,
+        "churn": 0.0092,
+        "churn_cancel": 0.0092,
+        "churn_silent": 0.0,
+        "renewers_with_march_tx": 9569.0,
+        "renewers_switched_method": 0.0009,
+        "mean_list_price": 149.0,
+        "tenure_median_days": 700.0,
+        "march_volume_index": 0.9652,
+        "silent_vs_avg": 0.0
+      }
+    }
+  },
+  "C_tiers": {
+    "profile": {
+      "99.0": {
+        "users": 360805,
+        "top_payment_methods": "41.0 (100%)",
+        "top_signup_channels": "7.0 (100%), 9.0 (0%)",
+        "discounted": 0.0,
+        "paid_mean": 99.0,
+        "tenure_median_days": 397.0,
+        "prev_price_same": 0.9843,
+        "has_prev": 0.9909,
+        "churn": 0.0181
+      },
+      "100.0": {
+        "users": 27223,
+        "top_payment_methods": "41.0 (91%), 30.0 (9%)",
+        "top_signup_channels": "7.0 (90%), 13.0 (3%)",
+        "discounted": 0.0,
+        "paid_mean": 100.0,
+        "tenure_median_days": 30.0,
+        "prev_price_same": 0.4817,
+        "has_prev": 0.5948,
+        "churn": 0.0076
+      },
+      "129.0": {
+        "users": 33868,
+        "top_payment_methods": "41.0 (85%), 30.0 (15%), 23.0 (0%)",
+        "top_signup_channels": "7.0 (89%), 13.0 (5%)",
+        "discounted": 0.0,
+        "paid_mean": 129.0,
+        "tenure_median_days": 747.0,
+        "prev_price_same": 0.9094,
+        "has_prev": 0.9561,
+        "churn": 0.0388
+      },
+      "149.0": {
+        "users": 286186,
+        "top_payment_methods": "41.0 (41%), 40.0 (25%), 37.0 (12%)",
+        "top_signup_channels": "9.0 (43%), 7.0 (41%)",
+        "discounted": 0.0083,
+        "paid_mean": 147.9781,
+        "tenure_median_days": 731.0,
+        "prev_price_same": 0.9791,
+        "has_prev": 0.9875,
+        "churn": 0.0418
+      },
+      "180.0": {
+        "users": 52081,
+        "top_payment_methods": "36.0 (85%), 29.0 (15%)",
+        "top_signup_channels": "9.0 (39%), 3.0 (30%)",
+        "discounted": 0.0029,
+        "paid_mean": 179.4712,
+        "tenure_median_days": 448.0,
+        "prev_price_same": 0.8972,
+        "has_prev": 0.9403,
+        "churn": 0.0493
+      }
+    },
+    "prev_to_cur": {
+      "99.0": {
+        "-1.0": 0.007,
+        "99.0": 0.995,
+        "100.0": 0.001,
+        "129.0": 0.013,
+        "149.0": 0.007,
+        "180.0": 0.0
+      },
+      "100.0": {
+        "-1.0": 0.034,
+        "99.0": 0.003,
+        "100.0": 0.994,
+        "129.0": 0.008,
+        "149.0": 0.005,
+        "180.0": 0.001
+      },
+      "129.0": {
+        "-1.0": 0.014,
+        "99.0": 0.001,
+        "100.0": 0.0,
+        "129.0": 0.929,
+        "149.0": 0.004,
+        "180.0": 0.001
+      },
+      "149.0": {
+        "-1.0": 0.195,
+        "99.0": 0.0,
+        "100.0": 0.005,
+        "129.0": 0.049,
+        "149.0": 0.977,
+        "180.0": 0.012
+      },
+      "180.0": {
+        "-1.0": 0.75,
+        "99.0": 0.0,
+        "100.0": 0.0,
+        "129.0": 0.001,
+        "149.0": 0.007,
+        "180.0": 0.986
+      }
+    },
+    "prices_per_method": {
+      "23": [
+        129.0,
+        149.0
+      ],
+      "27": [
+        149.0
+      ],
+      "29": [
+        180.0
+      ],
+      "30": [
+        100.0,
+        129.0,
+        149.0
+      ],
+      "31": [
+        149.0
+      ],
+      "33": [
+        149.0
+      ],
+      "34": [
+        149.0
+      ],
+      "36": [
+        180.0
+      ],
+      "37": [
+        149.0
+      ],
+      "39": [
+        149.0
+      ],
+      "40": [
+        149.0
+      ],
+      "41": [
+        99.0,
+        100.0,
+        129.0,
+        149.0
+      ]
+    }
+  },
+  "E_sizing": {
+    "rows": [
+      {
+        "lever": "silent churn, all methods",
+        "users_per_month": 4483,
+        "twd_12m_per_cohort": 6252772.029189809
+      },
+      {
+        "lever": "silent churn, at-risk methods",
+        "users_per_month": 2172,
+        "twd_12m_per_cohort": 3095066.063099671
+      },
+      {
+        "lever": "churn via cancel",
+        "users_per_month": 18105,
+        "twd_12m_per_cohort": 24033448.03363217
+      },
+      {
+        "lever": "new 99 sign-ups moved to 149 (no lost sign-ups)",
+        "users_per_month": 9801,
+        "twd_12m_per_cohort": 3460666.342689511
+      },
+      {
+        "lever": "recover 10% of silent churn, at-risk methods",
+        "users_per_month": 217,
+        "twd_12m_per_cohort": 309506.6063099671
+      },
+      {
+        "lever": "recover 25% of silent churn, at-risk methods",
+        "users_per_month": 543,
+        "twd_12m_per_cohort": 773766.5157749178
+      },
+      {
+        "lever": "recover 50% of silent churn, at-risk methods",
+        "users_per_month": 1086,
+        "twd_12m_per_cohort": 1547533.0315498356
+      }
+    ],
+    "new_paid_starts_per_month": {
+      "99": 9802.0,
+      "100": 3626.0,
+      "119": 1.0,
+      "120": 1.0,
+      "126": 0.0,
+      "129": 1639.0,
+      "143": 0.0,
+      "149": 11003.0,
+      "150": 417.0,
+      "180": 8203.0
+    },
+    "conversion_break_even": 0.24699764614968078
+  },
+  "F_experiments": [
+    {
+      "test": "1. payment recovery (at-risk methods)",
+      "baseline_churn": 0.0669341147720023,
+      "target_churn": 0.06024070329480207,
+      "n_per_arm": 20850,
+      "eligible_per_month": 92479,
+      "months_to_fill": 0.4509131802895793
+    },
+    {
+      "test": "1. payment recovery (at-risk methods)",
+      "baseline_churn": 0.0669341147720023,
+      "target_churn": 0.053547291817601844,
+      "n_per_arm": 4945,
+      "eligible_per_month": 92479,
+      "months_to_fill": 0.10694319791520238
+    },
+    {
+      "test": "1. payment recovery (at-risk methods)",
+      "baseline_churn": 0.0669341147720023,
+      "target_churn": 0.0468538803404016,
+      "n_per_arm": 2074,
+      "eligible_per_month": 92479,
+      "months_to_fill": 0.044853426183241604
+    },
+    {
+      "test": "2. price 149 vs 99 on new sign-ups",
+      "baseline_churn": 0.04176654343678587,
+      "target_churn": 0.046766543436785865,
+      "n_per_arm": 26545,
+      "eligible_per_month": 20805,
+      "months_to_fill": 2.551769993030577
+    },
+    {
+      "test": "2. price 149 vs 99 on new sign-ups",
+      "baseline_churn": 0.04176654343678587,
+      "target_churn": 0.05176654343678587,
+      "n_per_arm": 6979,
+      "eligible_per_month": 20805,
+      "months_to_fill": 0.6708910446924241
+    },
+    {
+      "test": "2. price 149 vs 99 on new sign-ups",
+      "baseline_churn": 0.04176654343678587,
+      "target_churn": 0.061766543436785865,
+      "n_per_arm": 1909,
+      "eligible_per_month": 20805,
+      "months_to_fill": 0.18351210837051693
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "faiz35ahmad/kkbox-engagement",
+  "title": "kkbox-engagement",
+  "code_file": "kkbox_engagement.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "competition_sources": ["kkbox-churn-prediction-challenge"],
+  "dataset_sources": [],
+  "kernel_sources": ["faiz35ahmad/kkbox-pricing-mart"]
+}

@@ -1,0 +1,8 @@
+lever,users_per_month,twd_12m_per_cohort,twd_per_year_if_every_month_like_march
+"silent churn, all methods",4483,6252772.029189809,75033264.3502777
+"silent churn, at-risk methods",2172,3095066.063099671,37140792.757196054
+churn via cancel,18105,24033448.03363217,288401376.40358603
+new 99 sign-ups moved to 149 (no lost sign-ups),9801,3460666.342689511,41527996.11227413
+"recover 10% of silent churn, at-risk methods",217,309506.6063099671,3714079.2757196054
+"recover 25% of silent churn, at-risk methods",543,773766.5157749178,9285198.189299013
+"recover 50% of silent churn, at-risk methods",1086,1547533.0315498356,18570396.378598027
