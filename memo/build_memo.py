@@ -95,41 +95,92 @@ def grouped_tenure(w=560):
     return hbars(items, w=w, label_w=150)
 
 
-# ---------------------------------------------------------------- the memo
+# ---------------------------------------------------------------- Phase 3 results
+P3 = RES / "phase3"
+drv = json.load(open(P3 / "drivers.json"))
+eng = json.load(open(P3 / "engagement.json"))
+A, B, E = drv["A_breakdown"], drv["B_payment"], drv["E_sizing"]
+basek = "base (auto-renew, paid, tier)"
+base_n, base = A[basek]["users"], A[basek]
+pmt = [dict(pm=int(float(r["pm"])), **{k: f(v) for k, v in r.items() if k != "pm"}) for r in csv.DictReader(open(P3 / "pm_table.csv"))]
+at_risk = [int(x) for x in B["at_risk_methods"]]
+size = {r["lever"]: r for r in E["rows"]}
+yr = lambda lever: size[lever]["twd_12m_per_cohort"] * 12
+risk_rows = [r for r in pmt if r["pm"] in at_risk]
+risk_n = int(sum(r["users"] for r in risk_rows))
+risk_churn = sum(r["users"] * r["churn"] for r in risk_rows) / risk_n
+risk_silent = sum(r["users"] * r["churn_silent"] for r in risk_rows) / risk_n
+conv_be = E["conversion_break_even"]
+starts = {int(float(k)): v for k, v in E["new_paid_starts_per_month"].items()}
+fb, ew = eng["feb_band"], eng["early_warning"]
+# from results/phase3/checks.md (kkbox-checks notebook): inside pm41, sign-up channel 7 carries every tier
+CH7 = {99: (283328, 0.0165), 149: (103507, 0.0324)}
+
+
+def n_arm(a, b):  # two-proportion sample size per arm, 80% power, alpha 0.05 (Cohen's h, same as statsmodels NormalIndPower)
+    import math
+    h = abs(2 * math.asin(math.sqrt(a)) - 2 * math.asin(math.sqrt(b)))
+    return math.ceil(((1.959964 + 0.841621) / h) ** 2)
+
+
+rec = 0.25
+t1_target = risk_churn - risk_silent * rec
+t1_n = n_arm(risk_churn, t1_target)
+t1_days = 2 * t1_n / risk_n * 30
+c149_all = A["base, price 149.0"]["churn"]
+t2_n = n_arm(c149_all, c149_all + 0.005)
+t2_flow = starts[99] + starts[149]
+t2_conv_n = n_arm(0.05, 0.05 * (1 - conv_be))
+
+
+def legend(*pairs):
+    return "<div class='lg'>" + "".join(f"<span><i style='background:{c}'></i>{t}</span>" for t, c in pairs) + "</div>"
+
+
+def split_bars(groups, label_w=120):
+    items = []
+    for lab, can, sil in groups:
+        items += [(f"{lab} · cancel", can, 0, 0, BLUE), (f"{lab} · silent", sil, 0, 0, SIENNA)]
+    return hbars(items, ci=False, label_w=label_w, fmt=lambda v: pct(v, 2))
+
+
+ex_a = split_bars([(p, A[f"base, price {p}.0"]["churn_cancel"], A[f"base, price {p}.0"]["churn_silent"]) for p in (99, 100, 129, 149, 180)], label_w=110)
+ex_b = hbars([(f"method {r['pm']}", r["churn_silent"], 0, 0, SIENNA if r["pm"] in at_risk else BLUE) for r in pmt if r["churn_silent"] > 0.001],
+             ci=False, label_w=90, fmt=lambda v: pct(v, 2))
+ex_d = split_bars([(k.replace(" d", " days"), v["churn_cancel"], v["churn_silent"]) for k, v in fb.items()], label_w=130)
+ex_p = hbars([(f"TWD {p}", f(t["churn"]), f(t["churn_lo"]), f(t["churn_hi"]), SIENNA if p == 149 else BLUE)
+              for p, t in sorted(tier.items())], fmt=lambda v: pct(v, 2))
+
+SIZE_ROWS = "".join(f"<tr><td>{a}</td><td>{b}</td><td>{n0(c)}</td><td><b>TWD {d / 1e6:,.1f} M</b></td><td>{e}</td></tr>" for a, b, c, d, e in [
+    ("Cancellations", "all methods", size["churn via cancel"]["users_per_month"], yr("churn via cancel"), "Largest pool, but no good early signal (section 7)"),
+    ("Silent exits", "all methods", size["silent churn, all methods"]["users_per_month"], yr("silent churn, all methods"), "Likely failed renewals"),
+    ("Silent exits", f"methods {', '.join(map(str, at_risk))}", size["silent churn, at-risk methods"]["users_per_month"], yr("silent churn, at-risk methods"), "Half the silent pool in 3 methods"),
+    ("↳ recover 25% of those", "", size["recover 25% of silent churn, at-risk methods"]["users_per_month"], yr("recover 25% of silent churn, at-risk methods"), "Test 1"),
+    ("New 99 sign-ups priced at 149", "pm 41", size["new 99 sign-ups moved to 149 (no lost sign-ups)"]["users_per_month"],
+     yr("new 99 sign-ups moved to 149 (no lost sign-ups)"), f"Upper bound: assumes no lost sign-ups. Test 2"),
+])
+A_ROWS = "".join(f"<tr><td>{lab}</td><td>{n0(A[k]['users'])}</td><td>{pct(A[k]['churn'], 2)}</td><td>{pct(A[k]['churn_cancel'], 2)}</td>"
+                 f"<td>{pct(A[k]['churn_silent'], 2)}</td><td>{A[k]['silent_share']:.0%}</td></tr>"
+                 for lab, k in [("Manual renewal", "auto_renew=0"), ("Auto-renew (base)", basek)])
+PM_ROWS = "".join(f"<tr><td>{r['pm']}{' ⚑' if r['pm'] in at_risk else ''}</td><td>{n0(r['users'])}</td><td>{pct(r['churn'], 2)}</td>"
+                  f"<td>{pct(r['churn_cancel'], 2)}</td><td>{pct(r['churn_silent'], 2)}</td><td>{r['tenure_median_days']:,.0f}</td></tr>" for r in pmt[:6])
 TIER_ROWS = "".join(
     f"<tr><td>{p}</td><td>{n0(t['users'])}</td><td>{pct(t['churn'], 2)} <span class='ci'>({pct(t['churn_lo'], 2)}–{pct(t['churn_hi'], 2)})</span></td>"
     f"<td>{pct(t['cancel'], 2)}</td><td>{pct(t['downgrade'], 2)}</td><td><b>{n0(t['R_12m'])}</b></td></tr>"
     for p, t in sorted(tier.items()))
-FUNNEL = [("Users with the official churn label", "970,960", "starting point"),
-          ("Has a subscription to price (valid payment on or before 28 Feb)", "968,436", "nothing to price otherwise"),
-          ("30-day plan", "942,176", "long plans are a different product"),
-          ("Auto-renew on", "853,899", "the decision is about automatic renewals"),
-          ("Price is 99, 100, 129, 149 or 180", "853,555", "the tiers being compared"),
-          ("Payment method 41", "543,671", "the only method that carries every tier"),
-          ("Subscription expires in March 2017", f"{coh_n:,}", "the month the label covers")]
-FUNNEL_ROWS = "".join(f"<tr><td>{i}</td><td>{a}</td><td>{b}</td><td>{c}</td></tr>" for i, (a, b, c) in enumerate(FUNNEL))
-SENS_ROWS = "".join(
-    f"<tr><td>{s['price_basis']}</td><td>{pct(s['churn149'], 2)}</td><td>{n0(s['R149'])}</td><td>{n0(s['gap'])}</td>"
-    f"<td>{f(s['margin_pts']):.1f}</td><td>{'yes' if s['still_pays'] == 'True' else 'no'}</td></tr>" for s in sens)
-
-ex1 = hbars([(f"TWD {p}", f(t["churn"]), f(t["churn_lo"]), f(t["churn_hi"]), SIENNA if p == 149 else BLUE)
-             for p, t in sorted(tier.items())], fmt=lambda v: pct(v, 2))
-ex4 = hbars([(f"method {int(float(r['pm']))}", f(r["churn"]), f(r["churn_lo"]), f(r["churn_hi"]),
-              SIENNA if int(float(r["pm"])) == 39 else BLUE) for r in pm], label_w=90)
-ex5 = hbars([(r["listen_band"].replace("no logs", "no listening logs"), f(r["churn"]), f(r["churn_lo"]), f(r["churn_hi"]), BLUE)
-             for r in listen], label_w=130, fmt=lambda v: pct(v, 2))
+r39 = next(r for r in pmt if r["pm"] == 39)
 
 HTML = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
-<title>Pricing memo: 149 vs 99</title>
+<title>Where KKBox loses subscribers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
 <style>
 @page {{ size: A4; margin: 25mm 25mm 22mm;
-  @bottom-left {{ content: "Pricing memo · KKBox subscriptions, March 2017"; font: 8pt Inter, sans-serif; color: {MUTED}; }}
+  @bottom-left {{ content: "Churn memo · KKBox subscriptions, March 2017"; font: 8pt Inter, sans-serif; color: {MUTED}; }}
   @bottom-right {{ content: "Page " counter(page) " of " counter(pages); font: 8pt Inter, sans-serif; color: {MUTED}; }} }}
 html {{ background: #fff; }}
 body {{ font: 10.5pt/1.5 "Source Serif 4", Georgia, serif; color: {INK}; max-width: 160mm; margin: 0 auto; }}
-h1, h2, h3, .kicker, table, .src, .tldr .nums {{ font-family: Inter, sans-serif; }}
+h1, h2, h3, .kicker, table, .src, .tldr .nums, .lg {{ font-family: Inter, sans-serif; }}
 h1 {{ font-size: 18pt; line-height: 1.25; font-weight: 600; color: #1C4286; margin: 0 0 4pt; }}
 h2 {{ font-size: 12.5pt; font-weight: 600; color: #1C4286; margin: 18pt 0 4pt; break-after: avoid; }}
 h3 {{ font-size: 10.5pt; font-weight: 600; margin: 12pt 0 2pt; break-after: avoid; }}
@@ -145,119 +196,126 @@ figure {{ margin: 10pt 0 12pt; break-inside: avoid; }}
 figcaption {{ font: 600 9.5pt/1.35 Inter, sans-serif; margin-bottom: 6pt; }}
 figcaption .ex {{ color: {SIENNA}; }}
 .src {{ font-size: 7.5pt; color: {MUTED}; margin-top: 4pt; }}
+.lg {{ font-size: 8pt; color: {MUTED}; margin: 0 0 4pt; }} .lg span {{ margin-right: 12pt; }}
+.lg i {{ display: inline-block; width: 9pt; height: 9pt; border-radius: 2pt; margin-right: 4pt; vertical-align: -1pt; }}
 table {{ border-collapse: collapse; width: 100%; font-size: 8.5pt; margin: 4pt 0 2pt; font-variant-numeric: tabular-nums; break-inside: avoid; }}
 th {{ text-align: left; font-weight: 600; border-bottom: 1pt solid {INK}; padding: 3pt 5pt; }}
-td {{ border-bottom: 0.5pt solid #E3E6EA; padding: 3pt 5pt; }}
+td {{ border-bottom: 0.5pt solid #E3E6EA; padding: 3pt 5pt; vertical-align: top; }}
 .ci {{ color: {MUTED}; font-size: 7.5pt; }}
 .rule {{ border: 0.5pt solid #D5DAE3; padding: 8pt 11pt; margin: 6pt 0 10pt; font-size: 10pt; }}
-.pb {{ break-before: page; }}
 </style></head><body>
 
-<div class="kicker">Analysis memo · Mohammad Faiz Ahmad · November 2026 · Data: KKBox (WSDM Cup 2018), {coh_n:,} subscribers</div>
-<h1>Keep monthly subscribers on 149, and test it on new sign-ups: it earns TWD {rule['gap']:,.0f} more a year than 99, and churn would have to almost triple to erase that</h1>
+<div class="kicker">Analysis memo · Mohammad Faiz Ahmad · November 2026 · Data: KKBox (WSDM Cup 2018), {base_n:,} paying monthly subscribers</div>
+<h1>KKBox loses most paying subscribers to cancellations, but the cheapest fix is the silent exits: test payment recovery first, then 149 on new sign-ups</h1>
 
 <div class="tldr">
-<p><b>Question.</b> Monthly subscribers paying TWD 149 churn more than those paying 99. Does the higher price still earn more per subscriber over a year?</p>
-<p><b>Answer.</b> Yes, by a wide margin. Among {coh_n:,} comparable subscribers, 149 churns {pct(rule['c149'], 2)} a month against {pct(rule['c99'], 2)} for 99, but earns TWD {rule['R149']:,.0f} a year against {rule['R99']:,.0f}. Churn at 149 would have to reach {pct(rule['break_even_churn'], 2)} before 99 earns more.</p>
-<p><b>Recommendation.</b> This comparison is observational, so it can't tell us how <i>new</i> users react to 149. Run a price test on new monthly sign-ups: about {test['n_per_arm']:,} users per arm over three billing cycles, with cancellations, downgrades and sign-up conversion as guardrails.</p>
+<p><b>Question.</b> Where is KKBox losing paying monthly subscribers, and what should it fix first?</p>
+<p><b>Answer.</b> Of the {base_n:,} auto-renewing subscribers whose plan expired in March 2017, {pct(base['churn'], 2)} left. {1 - base['silent_share']:.0%} of those pressed cancel first; the other {base['silent_share']:.0%} left <i>silently</i>, with auto-renew still on. Silent exits are concentrated in three payment methods and, unlike cancellations, are <i>more</i> common among heavy listeners, which is what failed renewal charges look like.</p>
+<p><b>Recommendation.</b> (1) Test payment recovery (retries plus an "update your payment method" prompt) on methods {', '.join(map(str, at_risk))}: about TWD {yr('recover 25% of silent churn, at-risk methods') / 1e6:.0f} M a year if it wins back a quarter of silent exits, readable in about six weeks. (2) Test 149 against 99 for new sign-ups: it pays unless it loses more than {conv_be:.0%} of sign-ups. (3) Treat cancellations as a research problem, not a model: listening barely predicts them.</p>
 <div class="nums">
-<div><b>+TWD {rule['gap']:,.0f}</b><span>12-month revenue per subscriber, 149 vs 99 (95% CI {rule['gap_ci'][0]:,.0f}–{rule['gap_ci'][1]:,.0f})</span></div>
-<div><b>{pct(rule['break_even_churn'], 2)}</b><span>monthly churn at which 149 stops paying (today {pct(rule['c149'], 2)})</span></div>
-<div><b>{test['n_per_arm']:,}</b><span>users per arm to detect a 0.5-point churn rise</span></div>
+<div><b>{1 - base['silent_share']:.0%} / {base['silent_share']:.0%}</b><span>of churners pressed cancel / left silently with auto-renew on</span></div>
+<div><b>TWD {yr('silent churn, at-risk methods') / 1e6:.0f} M</b><span>a year in silent exits from 3 payment methods (if every month is like March)</span></div>
+<div><b>{conv_be:.0%}</b><span>share of sign-ups 149 could lose and still earn more than 99</span></div>
 </div></div>
 
 <h2>1. Context</h2>
-<p>Every subscription business that raises a price faces the same trade: more revenue from each person who stays, against more people who leave. A pricing team needs one number that weighs the two, and a threshold for when the trade stops paying. This memo produces both for KKBox, a Taiwanese music-streaming service that released real, anonymised subscriber data for the WSDM Cup 2018 churn challenge.</p>
-<p>KKBox sells monthly plans at TWD 99, 100, 129, 149 and 180. In March 2017 the label tells us which subscribers did not renew within 30 days of their plan expiring. That is the definition of churn used throughout.</p>
+<p>KKBox is a Taiwanese music-streaming service that released real, anonymised subscriber data for the WSDM Cup 2018 churn challenge: 23 million payments from 2015 to March 2017, 6.8 million profiles, 392 million days of listening, and an official label saying which subscribers whose plan expired in March 2017 did not renew within 30 days. That label is the definition of churn throughout.</p>
+<p>A subscription business has three levers on revenue from existing subscribers: keep the people who decide to leave, keep the people who leave without deciding, and charge more. This memo sizes each lever, ranks them, and designs the test for each of the top two.</p>
 
 <h2>2. Goals and non-goals</h2>
-<p><b>Goals.</b> Estimate how churn differs by price for comparable subscribers; turn that into 12-month revenue per subscriber; decide, with a rule set in advance, whether 149 pays; and design the test that would confirm it.</p>
-<p><b>Non-goals.</b> Predicting which individual will churn (a modelling problem, not a pricing decision); setting the optimal price (this data has five prices, not a demand curve); and anything about the 180 tier, which is sold through different payment methods and can't be compared fairly (section 6).</p>
+<p><b>Goals.</b> Split churn into its sources; find where each source is concentrated; size each in TWD; decide what to test first and design the tests.</p>
+<p><b>Non-goals.</b> A churn-prediction model (section 7 shows the cheap signals are weak, and a model doesn't tell a product team what to change); the optimal price (five prices are not a demand curve); manual-renewal subscribers, who churn {pct(A['auto_renew=0']['churn'], 0)} a month and are a different product decision (section 4).</p>
 
 <h2>3. Who is counted</h2>
-<p>Each filter below is a judgment call that changes the answer, so each one is listed with its reason. The price of a subscriber is the list price of the plan that expires in March, taken from their last payment on or before 28 February. I didn't use the March payment, because that payment is often the renewal itself: anyone who has one is, by construction, not a churner, so pricing by it would leak the outcome.</p>
-<figure><figcaption><span class="ex">Exhibit 1.</span> From 970,960 labelled users to a cohort of {coh_n:,} comparable monthly subscribers</figcaption>
-<table><tr><th>#</th><th>Rule</th><th>Users left</th><th>Why</th></tr>{FUNNEL_ROWS}</table>
-<div class="src">Source: KKBox train_v2, transactions, transactions_v2 (Kaggle). Ledger of 22,975,416 payments after removing 3,339 exact duplicates. Seven automated data checks pass.</div></figure>
+<p>From 970,960 labelled users, I keep those whose subscription expiring in March is a 30-day plan, on auto-renew, at a paid standard price (99, 100, 129, 149 or 180): {base_n:,} subscribers. A subscriber's plan, price and payment method come from their last valid payment on or before 28 February. I didn't use the March payment, because it is often the renewal itself, which would leak the outcome. For the price comparison I go further and keep only payment method 41, the one method that carries every tier from 99 to 149 ({coh_n:,} subscribers).</p>
+<p class="src">Ledger of 22,975,416 payments after removing 3,339 exact duplicates; seven automated data checks pass. {drv['dq']['expiring_row_is_a_cancel']:,} subscribers' expiring payment is itself a cancellation row; they are counted as cancellers.</p>
 
-<h2>4. How it is measured, and the rule written before the results</h2>
+<h2>4. Where churn comes from: four in five churners pressed cancel</h2>
+<p>A churner either <b>cancelled</b> (a cancellation on or after the expiring payment) or left <b>silently</b> (no cancellation, auto-renew still on, and no renewal within 30 days). For an auto-renewing subscriber, a silent exit means the renewal charge didn't go through: an expired card, a failed carrier bill, or a payment method that stopped working.</p>
+<figure><figcaption><span class="ex">Exhibit 1.</span> Manual renewers churn ten times as often, but auto-renewers are 90% of the base; among them most churners cancel</figcaption>
+<table><tr><th>Group</th><th>Users</th><th>Churn</th><th>Via cancel</th><th>Silent</th><th>Silent share of churn</th></tr>{A_ROWS}</table>
+<div class="src">30-day plans expiring in March 2017. For manual renewers a "silent" exit just means not paying again. Source: results/phase3/drivers.json.</div></figure>
+<figure><figcaption><span class="ex">Exhibit 2.</span> Cancellations rise with price; silent exits don't follow price</figcaption>
+{legend(('cancelled', BLUE), ('left silently', SIENNA))}{ex_a}
+<div class="src">Auto-renew base, all payment methods.</div></figure>
+
+<h2>5. Silent exits: concentrated in three payment methods, and they hit engaged listeners</h2>
+<p>Silent churn averages {pct(B['avg_silent'], 2)} a month, but three methods run at two to four times that: {', '.join(f"method {r['pm']} ({pct(r['churn_silent'], 2)})" for r in risk_rows)}. Together they cover {risk_n:,} subscribers and about half of all silent exits.</p>
+<figure><figcaption><span class="ex">Exhibit 3.</span> Silent churn by payment method (methods with at least 1,000 subscribers; sienna = at least twice the average)</figcaption>
+{ex_b}
+<table><tr><th>Method</th><th>Users</th><th>Churn</th><th>Via cancel</th><th>Silent</th><th>Median tenure (days)</th></tr>{PM_ROWS}</table>
+<div class="src">Source: results/phase3/pm_table.csv. March transaction volume for all three is normal (0.96–1.23 of the overall ratio), so no method was switched off.</div></figure>
+<p>The evidence that these are failed charges rather than quiet decisions comes from listening. Subscribers who listened on 22–28 days in February cancel half as often as those who didn't listen at all ({pct(fb['22-28 d']['churn_cancel'], 2)} vs {pct(fb['0 d']['churn_cancel'], 2)}), but they leave silently <i>more</i> often ({pct(fb['22-28 d']['churn_silent'], 2)} vs {pct(fb['0 d']['churn_silent'], 2)}). People who use the product every day don't drift away; their payment fails. This is still an inference: KKBox's data has no "charge failed" field, so the first step is to ask the payments team for decline logs on these three methods.</p>
+<p><b>A correction to an earlier draft.</b> Method 39 churns {pct(r39['churn'], 0)} at 149, and I had read it as a billing failure. With cancellations counted from January rather than only March, almost all of those churners cancelled ({pct(r39['churn_cancel'], 1)} via cancel, {pct(r39['churn_silent'], 2)} silent), spread across 71 different days. It is a small group ({r39['users']:,.0f} subscribers) of people deliberately leaving or moving to another method, not a payments problem.</p>
+
+<h2>6. Price: 149 pays for existing subscribers, but the real unknown is sign-ups</h2>
+<p><b>The tiers are plans people chose, not prices they reacted to.</b> 99.5% of subscribers whose previous plan was 99 are still on 99, and the same holds for every tier, so the data contains almost no price changes. What it can show is how people who chose 149 behave compared with people who chose 99. Within payment method 41 and sign-up channel 7, which carries every tier, 149 churns {pct(CH7[149][1], 2)} a month against {pct(CH7[99][1], 2)} for 99.</p>
+<figure><figcaption><span class="ex">Exhibit 4.</span> Monthly churn by price, payment method 41 (bars = rate, lines = 95% Wilson interval)</figcaption>
+{ex_p}
+<table><tr><th>Price (TWD)</th><th>Users</th><th>Churn (95% CI)</th><th>Cancelled in March</th><th>Downgraded</th><th>Revenue, 12 m</th></tr>{TIER_ROWS}</table>
+<div class="src">Source: results/tier_table.csv. Revenue per subscriber = p × (1 − (1 − c)<sup>12</sup>) ÷ c, assuming churn stays constant.</div></figure>
+<p>Under the decision rule committed to git before any churn rate was computed, the verdict is <b>149 pays</b>: TWD {rule['gap']:,.0f} more per subscriber a year (95% CI {rule['gap_ci'][0]:,.0f}–{rule['gap_ci'][1]:,.0f}), and churn would have to reach {pct(rule['break_even_churn'], 2)} before 99 earns more. It survives the obvious challenges. Tenure doesn't explain it (Mantel-Haenszel odds ratio {ten['mh_or']:.2f} within tenure bands). It holds with 3 extra points of churn at 149 and on prices actually paid. The {rose149[0]:,} subscribers whose price rose to 149 churn {pct(rose149[1])}, well under break-even.</p>
+<figure><figcaption><span class="ex">Exhibit 5.</span> Revenue per subscriber at 149 stays above 99 until churn reaches {pct(rule['break_even_churn'], 2)}</figcaption>
+{breakeven_chart()}</figure>
+<p><b>So the price question moves to sign-ups.</b> A higher price hurts most at the moment someone decides whether to subscribe, and this data can't see that moment. The useful number is the sign-up loss 149 can afford: 149 still earns more than 99 unless it loses more than <b>{conv_be:.0%}</b> of the people who would have subscribed at 99 (1 − R<sub>99</sub>/R<sub>149</sub>, all payment methods). About {starts[99]:,.0f} new paid subscriptions a month start at 99; moving them to 149 with no loss would be worth up to TWD {yr('new 99 sign-ups moved to 149 (no lost sign-ups)') / 1e6:.0f} M a year. That is the ceiling, and only a test can tell how much of it is real.</p>
+
+<h2>7. Can listening warn us before someone cancels? Barely</h2>
+<p>The obvious retention play is to spot disengaged subscribers before renewal and win them back. Using only listening that happened before 28 February ({eng['rows_read']:,} log rows), churn falls from {pct(fb['0 d']['churn'], 2)} for subscribers who didn't listen in February to {pct(fb['22-28 d']['churn'], 2)} for near-daily listeners. That is a real gradient but a weak one. A flag for "listened 7 days or fewer, or listening stopped or halved" catches {ew['share_of_cancel_churners_caught']:.0%} of later cancellers but flags {ew['flagged_share']:.0%} of everyone, a lift of only {ew['lift']:.1f}×. An earlier draft reported a much steeper drop (3.30% to 0.72%), but that used March listening, which partly measures people who had already left.</p>
+<figure><figcaption><span class="ex">Exhibit 6.</span> February listening vs March churn: cancellations fall with listening, silent exits rise</figcaption>
+{legend(('cancelled', BLUE), ('left silently', SIENNA))}{ex_d}
+<div class="src">Auto-renew base. Source: results/phase3/engagement_feb_band.csv.</div></figure>
+<p>A quarter of paying subscribers ({fb['0 d']['share_of_users']:.0%}) didn't listen at all in February and still mostly renewed. Waking them up with a "we miss you" message could just as easily remind them to cancel, so any re-engagement campaign needs a holdout group.</p>
+
+<h2>8. What each problem is worth, and what to do first</h2>
+<figure><figcaption><span class="ex">Exhibit 7.</span> TWD a year at stake, per lever</figcaption>
+<table><tr><th>Lever</th><th>Scope</th><th>Subscribers / month</th><th>TWD a year</th><th>Note</th></tr>{SIZE_ROWS}</table>
+<div class="src">Value of keeping one subscriber = their tier's 12-month revenue. One monthly cohort × 12, assuming every month looks like March 2017. Source: results/phase3/sizing.csv.</div></figure>
+<p>Cancellations are the biggest pool, but there is no cheap way to target them (section 7) and no test I can design from this data alone; the next step is research into why people cancel (an exit survey in the cancel flow), not a model. Payment recovery is smaller but cheap to build, low-risk to users, and fast to read, so it goes first. The price test is worth more if it works, but it touches every new subscriber and takes longer to read, so it goes second.</p>
+
+<h2>9. The two tests</h2>
+<h3>Test 1: payment recovery on methods {', '.join(map(str, at_risk))}</h3>
 <ul>
-<li><b>Churn rate</b> = subscribers with <code>is_churn = 1</code> ÷ subscribers in the tier. Unit: a person, not a payment.</li>
-<li><b>12-month revenue per starting subscriber</b> = p × (1 − (1 − c)<sup>12</sup>) ÷ c, where p is the monthly price and c the monthly churn rate. It is the sum of 12 monthly payments, each a little less likely than the last. It assumes churn stays constant.</li>
-<li><b>Break-even churn</b> = the churn rate at which 149's revenue equals 99's revenue today.</li>
-<li><b>Guardrails</b>: March cancellation rate, and the share who renewed at a lower price (downgrades).</li>
+<li><b>Who:</b> auto-renewing subscribers on these methods whose plan expires during the test, randomised 50/50 by user, stratified by method. About {risk_n:,} become eligible each month.</li>
+<li><b>Treatment:</b> on a failed renewal charge, retry on days 1, 3 and 7, and send an in-app and email prompt with a one-tap link to update the payment method. Control: current behaviour.</li>
+<li><b>Primary metric:</b> share who renew within 30 days of expiry (1 − churn). Today {pct(risk_churn, 2)} churn.</li>
+<li><b>Guardrails:</b> cancellation rate (a prompt can remind people to cancel; ship only if it rises by under 0.3 points), complaints and refund requests.</li>
+<li><b>Size:</b> winning back a quarter of silent exits moves churn from {pct(risk_churn, 2)} to {pct(t1_target, 2)}; detecting that at 80% power and α = 0.05 needs <b>{t1_n:,} subscribers per arm</b>, about {t1_days:.0f} days of eligible subscribers, plus the 30-day renewal window: <b>a readout in about six weeks</b>.</li>
+<li><b>Ship rule:</b> renewal rate higher with a 95% interval above zero, and the cancellation guardrail holds.</li>
 </ul>
-<div class="rule"><b>Decision rule (committed to git on 20 Nov 2026, before any churn rate was computed).</b> If 149 earns more than 99, the 95% interval of the gap is above zero, and 149's churn is at least 1 point below break-even: propose a price test that moves new subscribers to 149. If the interval includes zero or the margin is under 1 point: too close to call, so run the test first. If 149 earns less: don't raise the price.</div>
-
-<h2>5. Findings</h2>
-<h3>149 churns about twice as often as 99, but the gap is less than 2 points</h3>
-<figure><figcaption><span class="ex">Exhibit 2.</span> Monthly churn by price, payment method 41 only (bars = rate, lines = 95% Wilson interval)</figcaption>
-{ex1}
-<table><tr><th>Price (TWD)</th><th>Users</th><th>Churn (95% CI)</th><th>Cancelled</th><th>Downgraded</th><th>Revenue, 12 m</th></tr>{TIER_ROWS}</table>
-<div class="src">Source: kkbox-pricing-analysis notebook, results/tier_table.csv.</div></figure>
-<p>Two things stand out. First, the 100 tier churns least of all ({pct(tier[100]['churn'], 2)}). An earlier pass on a truncated copy of the data, using cancellations as a stand-in for churn, had suggested the opposite; with the full data and the real label, that finding reversed. Second, the guardrails move with churn: at 149, {pct(tier[149]['cancel'], 1)} cancelled and {pct(tier[149]['downgrade'], 1)} downgraded, against {pct(tier[99]['cancel'], 1)} and {pct(tier[99]['downgrade'], 2)} at 99. A real price rise would need to watch both.</p>
-
-<h3>Price still wins: 149 would need {pct(rule['break_even_churn'], 2)} churn before 99 earns more</h3>
-<figure><figcaption><span class="ex">Exhibit 3.</span> 12-month revenue per subscriber at 149 falls as churn rises, but stays above 99 until churn reaches {pct(rule['break_even_churn'], 2)}</figcaption>
-{breakeven_chart()}
-<div class="src">Revenue = p × (1 − (1 − c)<sup>12</sup>) ÷ c. Bootstrap (10,000 draws) 95% CI of the gap: TWD {rule['gap_ci'][0]:,.0f}–{rule['gap_ci'][1]:,.0f}.</div></figure>
-<p>Under the committed rule the verdict is outcome 1: <b>149 pays</b>. The gap is TWD {rule['gap']:,.0f} per subscriber per year, its interval is nowhere near zero, and the margin to break-even is {rule['margin_pts']:.1f} points against the 1 point the rule asks for.</p>
-
-<h2>6. Is it really the price?</h2>
-<h3>Payment method had to be held fixed first</h3>
-<p>Price is tangled up with how people pay. The 180 tier is sold only through methods that never carry 99, so a 180-vs-99 comparison would mostly compare payment channels. Payment method 41 is the only one that carries every tier from 99 to 149, which is why the cohort is limited to it. Exhibit 4 shows how much the method alone matters: at the same 149 price, churn runs from {pct(pm[0]['churn'])} to {pct(pm[-1]['churn'])}.</p>
-<figure><figcaption><span class="ex">Exhibit 4.</span> Same price, very different churn: monthly churn at TWD 149 by payment method (methods with at least 1,000 users)</figcaption>
-{ex4}<div class="src">All payment methods, 30-day auto-renew plans expiring in March 2017. Source: results/pm149_table.csv.</div></figure>
-
-<h3>Tenure doesn't explain the gap</h3>
-<p>Longer-standing subscribers churn less, and 149 users are more often long-standing, so tenure could have been hiding behind price. It isn't. Within tenure bands the gap is {ten['adjusted_gap_pts']:.2f} points against {ten['crude_gap_pts']:.2f} overall, and the Mantel-Haenszel odds ratio pooled across bands is {ten['mh_or']:.2f} (95% CI {ten['mh_or_ci'][0]:.2f}–{ten['mh_or_ci'][1]:.2f}). The gap is no smaller in any band.</p>
-<figure><figcaption><span class="ex">Exhibit 5.</span> Within every tenure band, 149 (blue) churns more than 99 (green)</figcaption>
-{grouped_tenure()}<div class="src">Tenure = days from first recorded payment (from Jan 2015) to the expiring payment.</div></figure>
-
-<h3>People whose price went up don't change the verdict</h3>
-<p>The rule named one result that would change my mind: users whose price rose churning above break-even. {rose['users']:,} users had a higher price on their expiring plan than on their previous one. Most of these moved from 99 to 100, so the useful group is the {rose149[0]:,} who moved up to 149. They churn at {pct(rose149[1])}, above 149's average of {pct(rule['c149'], 2)} (a price-shock effect), but far below the {pct(rule['break_even_churn'], 2)} break-even.</p>
-
-<h2>7. How sure is the verdict?</h2>
-<p>I stressed the two inputs most likely to be wrong: churn at 149, and the price itself (list price versus what people actually paid).</p>
-<figure><figcaption><span class="ex">Exhibit 6.</span> The verdict survives 3 extra points of churn at 149 and the switch to the amount actually paid</figcaption>
-<table><tr><th>Price basis</th><th>Churn at 149</th><th>Revenue at 149</th><th>Gap vs 99</th><th>Margin to break-even (pts)</th><th>Still pays?</th></tr>{SENS_ROWS}</table>
-<div class="src">99's revenue held at TWD {rule['R99']:,.0f}. Source: results/sensitivity.csv.</div></figure>
-
-<h2>8. Recommendation and the test</h2>
-<p><b>Keep existing monthly subscribers on 149, and test 149 against 99 for new monthly sign-ups.</b> The existing-user data says 149 pays, but these users chose their price, so the data can't show how a new user facing 149 instead of 99 would behave, or whether they would sign up at all. A test answers that.</p>
+<h3>Test 2: 149 vs 99 for new monthly sign-ups (payment method 41)</h3>
 <ul>
-<li><b>Who:</b> new monthly sign-ups on payment method 41, randomly assigned at the offer screen to 99 or 149.</li>
-<li><b>Primary metric:</b> revenue per assigned user over three billing cycles. Everyone assigned counts, including those who never convert.</li>
-<li><b>Guardrails:</b> sign-up conversion, churn at each renewal, cancellations, downgrades, support contacts.</li>
-<li><b>Size:</b> {test['n_per_arm']:,} users per arm to detect churn moving from {pct(test['base'], 2)} to {pct(test['base'] + 0.005, 2)} at 80% power, α = 0.05.</li>
-<li><b>Duration:</b> at least three billing cycles, because the first renewal after a price change is when the price-shock effect shows up.</li>
-<li><b>Ship rule, set now:</b> ship 149 if revenue per assigned user is higher with a 95% interval above zero and no guardrail worsens by more than 1 point.</li>
+<li><b>Who:</b> new visitors reaching the plan page, randomised by account at the offer screen to see 99 or 149. Existing subscribers are untouched.</li>
+<li><b>Primary metric:</b> 12-month revenue per assigned visitor = sign-up rate × revenue per subscriber, counting everyone assigned, including those who don't subscribe.</li>
+<li><b>Leading indicator, read first:</b> sign-up rate. Stop early for 149 if it drops by more than {conv_be:.0%}, because past that line 149 can't win. At an assumed 5% plan-page conversion, detecting a {conv_be:.0%} drop needs about {t2_conv_n:,} visitors per arm.</li>
+<li><b>Then:</b> first-renewal churn, which needs {t2_n:,} sign-ups per arm to detect a 0.5-point rise from {pct(c149_all, 2)}. At about {t2_flow:,.0f} new 99 and 149 sign-ups a month, that is roughly {2 * t2_n / t2_flow:.1f} months of sign-ups plus one renewal cycle.</li>
+<li><b>Guardrails:</b> plan mix (do people switch to 129 or 180 instead?), refunds, and complaints from people who compare prices; randomise by account and device to limit that.</li>
+<li><b>Ship rule:</b> revenue per assigned visitor higher at 149 with a 95% interval above zero, and no guardrail worse by more than 1 point.</li>
 </ul>
-
-<h2>9. A side finding worth a call: payment method 39</h2>
-<p>At 149, subscribers paying through method 39 churn at {pct(p39['churn'])}, against {pct(p_other['churn'])} on other methods. It doesn't look like a promotion ending: they are long-standing (median tenure {p39['tenure_median_days']:,.0f} days), they paid full price, and their volume was steady through February. What stands out is that they rarely cancel ({pct(p39['cancelled_in_march'])} against {pct(p_other['cancelled_in_march'])}), and of the {renew39:,} who did renew, {switched39:,} ({switched39 / renew39:.0%}) switched to a different payment method. People who leave without cancelling, while those who stay change how they pay, is the pattern of <b>involuntary churn</b>: failed charges, or a method being withdrawn. KKBox doesn't document what method 39 is, so this is a question for the payments team, not a conclusion. If it is a billing failure, the roughly {round(p39['users'] * p39['churn']):,} who churned would have been worth about TWD {round(p39['users'] * p39['churn']) * rule['R149']:,.0f} a year at 149's revenue per subscriber.</p>
 
 <h2>10. Risks, limits, and what would change my mind</h2>
 <ul>
-<li><b>Observational data.</b> Users picked their tier. The test in section 8 is the fix.</li>
-<li><b>One renewal month.</b> The constant-churn assumption turns one month into a year. If churn at 149 rises over time, the margin shrinks; section 7 shows how far it can rise.</li>
-<li><b>Listening is concurrent, not predictive.</b> Churn falls from {pct(listen[0]['churn'], 2)} with no listening logs to {pct(listen[-1]['churn'], 2)} for those who listened 24–31 days in March, but that is measured in the renewal month itself, so it describes churners rather than predicting them.</li>
-<li><b>Music, not video.</b> KKBox is a Taiwanese music service in 2017. The method transfers to a video service; the numbers don't.</li>
-<li><b>Age and gender</b> are valid for only 12% of the cohort, so I didn't use them.</li>
-<li><b>What would change my mind:</b> a test where sign-up conversion at 149 falls by more than the revenue gain, or churn at 149 rising toward {pct(rule['break_even_churn'], 1)} over later renewals.</li>
+<li><b>"Silent" is inferred, not observed.</b> If decline logs show these exits aren't failed charges, Test 1 loses its basis; it drops to a smaller experiment on whatever the logs do show.</li>
+<li><b>One month stands in for a year.</b> All annual figures assume every month looks like March 2017.</li>
+<li><b>Observational price comparison.</b> People chose their tier. Test 2 is the fix.</li>
+<li><b>Music, Taiwan, 2017.</b> The method transfers to a video service; the numbers don't.</li>
+<li><b>Age and gender</b> are valid for only 12% of subscribers, so I didn't use them.</li>
+<li><b>What would change my mind:</b> decline logs showing silent exits aren't failed payments; a sign-up drop above {conv_be:.0%} at 149; or a cancel-flow survey showing cancellations driven by something fixable, which would put cancellations first.</li>
 </ul>
 
 <h2>Appendix: reproduce every number</h2>
-<p>Pipeline and notebooks: <code>subscriber-movements/</code>. Data never leaves Kaggle. Run, in order, the notebooks <code>kkbox-to-parquet</code> → <code>kkbox-pricing-mart</code> → <code>kkbox-pricing-analysis</code> → <code>kkbox-pricing-extras</code>; download their outputs into <code>analysis/results/</code>; then run <code>python memo/build_memo.py</code>, which builds this document from those files. The decision rule is <code>analysis/decision_rule.md</code>, committed before the analysis.</p>
-<p class="src">Data: KKBox Churn Prediction Challenge, WSDM Cup 2018, kaggle.com/c/kkbox-churn-prediction-challenge. Method references: Wilson score interval; Mantel-Haenszel pooled odds ratio; two-proportion power analysis (statsmodels).</p>
+<p>Pipeline and notebooks: <code>subscriber-movements/kaggle/</code>. The data never leaves Kaggle. Notebooks, in order: <code>kkbox-to-parquet</code> → <code>kkbox-pricing-mart</code> → <code>kkbox-pricing-analysis</code>, <code>kkbox-pricing-extras</code>, <code>kkbox-churn-drivers</code>, <code>kkbox-engagement</code> (streams the 30 GB listening log), <code>kkbox-checks</code>. Their outputs go into <code>analysis/results/</code>; then <code>python memo/build_memo.py</code> builds this document from those files. The pricing decision rule is <code>analysis/decision_rule.md</code>; the test plans are <code>analysis/experiment_design.md</code>.</p>
+<p class="src">Data: KKBox Churn Prediction Challenge, WSDM Cup 2018, kaggle.com/c/kkbox-churn-prediction-challenge. Methods: Wilson score interval; Mantel-Haenszel pooled odds ratio; two-proportion power analysis (Cohen's h).</p>
 </body></html>"""
 
 (HERE / "memo.html").write_text(HTML)
 print("wrote", HERE / "memo.html")
 chrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 if "--pdf" in sys.argv:
-    subprocess.run([chrome, "--headless", "--disable-gpu", "--no-pdf-header-footer", "--virtual-time-budget=15000",
+    try:
+        subprocess.run([chrome, "--headless", "--disable-gpu", "--no-pdf-header-footer", "--run-all-compositor-stages-before-draw", "--virtual-time-budget=8000",
                     f"--user-data-dir={tempfile.mkdtemp()}",  # a separate profile, so an open Chrome window doesn't block it
                     f"--print-to-pdf={HERE / 'memo.pdf'}", (HERE / "memo.html").as_uri()],
-                   stderr=subprocess.DEVNULL)  # Chrome can exit 2 on a harmless allocator warning even after writing the PDF
+                       stderr=subprocess.DEVNULL, timeout=90)  # Chrome can exit 2, or hang, after writing the PDF
+    except subprocess.TimeoutExpired:
+        pass
     print("wrote", HERE / "memo.pdf")

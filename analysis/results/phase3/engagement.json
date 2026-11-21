@@ -1,0 +1,131 @@
+{
+  "rows_read": 392106543,
+  "base_users": 760163,
+  "with_any_jan_feb_listening": 0.7706623447865787,
+  "feb_band": {
+    "0 d": {
+      "users": 197354,
+      "churn": 0.0371,
+      "churn_cancel": 0.0329,
+      "churn_silent": 0.0042,
+      "share_of_users": 0.2596
+    },
+    "1-7 d": {
+      "users": 141332,
+      "churn": 0.0322,
+      "churn_cancel": 0.0268,
+      "churn_silent": 0.0054,
+      "share_of_users": 0.1859
+    },
+    "8-14 d": {
+      "users": 119764,
+      "churn": 0.0276,
+      "churn_cancel": 0.0214,
+      "churn_silent": 0.0062,
+      "share_of_users": 0.1576
+    },
+    "15-21 d": {
+      "users": 127038,
+      "churn": 0.0257,
+      "churn_cancel": 0.0189,
+      "churn_silent": 0.0067,
+      "share_of_users": 0.1671
+    },
+    "22-28 d": {
+      "users": 174675,
+      "churn": 0.0237,
+      "churn_cancel": 0.0163,
+      "churn_silent": 0.0074,
+      "share_of_users": 0.2298
+    }
+  },
+  "feb_band_pm41": {
+    "0 d": {
+      "users": 172939,
+      "churn": 0.0295,
+      "churn_cancel": 0.0272,
+      "churn_silent": 0.0023,
+      "share_of_users": 0.3252
+    },
+    "1-7 d": {
+      "users": 104053,
+      "churn": 0.021,
+      "churn_cancel": 0.0175,
+      "churn_silent": 0.0036,
+      "share_of_users": 0.1957
+    },
+    "8-14 d": {
+      "users": 78996,
+      "churn": 0.018,
+      "churn_cancel": 0.0142,
+      "churn_silent": 0.0038,
+      "share_of_users": 0.1486
+    },
+    "15-21 d": {
+      "users": 78249,
+      "churn": 0.0174,
+      "churn_cancel": 0.0128,
+      "churn_silent": 0.0045,
+      "share_of_users": 0.1472
+    },
+    "22-28 d": {
+      "users": 97506,
+      "churn": 0.0155,
+      "churn_cancel": 0.0107,
+      "churn_silent": 0.0047,
+      "share_of_users": 0.1834
+    }
+  },
+  "trend": {
+    "stopped in Feb": {
+      "users": 23020,
+      "churn": 0.0417,
+      "churn_cancel": 0.0373,
+      "churn_silent": 0.0044,
+      "share_of_users": 0.0303
+    },
+    "silent both months": {
+      "users": 174334,
+      "churn": 0.0365,
+      "churn_cancel": 0.0323,
+      "churn_silent": 0.0042,
+      "share_of_users": 0.2293
+    },
+    "started in Feb": {
+      "users": 33036,
+      "churn": 0.0332,
+      "churn_cancel": 0.0285,
+      "churn_silent": 0.0047,
+      "share_of_users": 0.0435
+    },
+    "fell > 50%": {
+      "users": 114773,
+      "churn": 0.0312,
+      "churn_cancel": 0.025,
+      "churn_silent": 0.0062,
+      "share_of_users": 0.151
+    },
+    "rose > 50%": {
+      "users": 95788,
+      "churn": 0.0257,
+      "churn_cancel": 0.0195,
+      "churn_silent": 0.0062,
+      "share_of_users": 0.126
+    },
+    "steady (\u00b150%)": {
+      "users": 319212,
+      "churn": 0.0254,
+      "churn_cancel": 0.0186,
+      "churn_silent": 0.0069,
+      "share_of_users": 0.4199
+    }
+  },
+  "early_warning": {
+    "flagged_share": 0.5201897487775649,
+    "churn_flagged": 0.03418312769169687,
+    "churn_not_flagged": 0.024870179363591,
+    "lift": 1.1503784706704165,
+    "share_of_cancel_churners_caught": 0.6376691521679094,
+    "share_of_silent_churners_caught": 0.4398840062458175
+  }
+}

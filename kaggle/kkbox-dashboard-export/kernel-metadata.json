@@ -1,0 +1,13 @@
+{
+  "id": "faiz35ahmad/kkbox-dashboard-export",
+  "title": "kkbox-dashboard-export",
+  "code_file": "kkbox_dashboard_export.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "competition_sources": [],
+  "dataset_sources": [],
+  "kernel_sources": ["faiz35ahmad/kkbox-pricing-mart", "faiz35ahmad/kkbox-churn-drivers", "faiz35ahmad/kkbox-engagement"]
+}
