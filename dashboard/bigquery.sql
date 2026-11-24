@@ -33,3 +33,18 @@ from kkbox.subscribers;
 select count(*) users, round(avg(churned) * 100, 2) churn_pct,
        round(avg(churn_cancel) * 100, 2) cancel_pct, round(avg(churn_silent) * 100, 2) silent_pct
 from kkbox.v_dashboard;
+
+-- display views for page 5 (pre-formatted text, so Looker tables need no aggregation settings)
+create or replace view kkbox.v_sizing_display as
+select lever as Lever,
+       format('%\'d', users_per_month) as Subscribers_per_month,
+       format('TWD %.1f M', twd_per_year_if_every_month_like_march / 1e6) as TWD_per_year,
+       twd_per_year_if_every_month_like_march as sort_value
+from kkbox.sizing;
+
+create or replace view kkbox.v_experiments_display as
+select test as Test,
+       format('%.2f%% to %.2f%%', baseline_churn * 100, target_churn * 100) as Detect_churn_change,
+       format('%\'d', n_per_arm) as Users_per_arm,
+       format('%.1f', months_to_fill) as Months_to_fill_both_arms
+from kkbox.experiment_sizes;
