@@ -1,4 +1,26 @@
-# subscriber-movements
+# KKBox: where a music app loses paying subscribers
+
+Analysis of real KKBox subscriber data (WSDM Cup 2018): a billing ledger of 23M payments, and 760K auto-renew subscribers whose plans expired in March 2017.
+
+**Read the memo:** [memo/memo.pdf](memo/memo.pdf) (8 pages)
+
+**Findings**
+- 80% of auto-renew churn is subscribers pressing cancel; 20% is silent lapses with no cancel.
+- Silent lapses cluster in 3 payment methods (40, 30, 29) at 2x+ the average rate, consistent with failed payments.
+- TWD 149 earns +TWD 410 per subscriber per year vs TWD 99 (95% CI 401–418) among 531,743 comparable subscribers, despite higher churn. The decision rule was written before the analysis: [analysis/decision_rule.md](analysis/decision_rule.md).
+- Two tests designed: payment recovery (13,624 users per arm, ~6 weeks) and 149 vs 99 on new sign-ups: [analysis/experiment_design.md](analysis/experiment_design.md).
+
+**Where things are**
+- `kaggle/`: the notebooks that ran on Kaggle (Parquet conversion, pricing mart, churn drivers, engagement over 30 GB of listening logs, checks).
+- `analysis/results/`: the small result tables behind the memo.
+- `dashboard/`: BigQuery SQL and the Looker Studio build guide.
+- `memo/`: the memo and the script that builds it.
+
+---
+
+The rest of this repo is a separate data-engineering project on the same theme (subscriber movements), described below.
+
+## subscriber-movements
 
 A daily batch pipeline that turns messy billing webhooks from four channels (our own card
 processor, Apple, Roku, Amazon) into one subscription ledger, a star schema, and a daily
