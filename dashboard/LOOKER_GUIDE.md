@@ -1,5 +1,9 @@
 # Building the Looker Studio dashboard (about 30–40 minutes)
 
+**Built 2026-11-24 (by Claude via Playwright, in Faiz's account):** https://lookerstudio.google.com/reporting/62de4d11-cf01-48a9-91dc-e3198d6fdd19
+Pages: Overview · Silent exits · Engagement · Price (chart filter: payment method 41) · What to fix first (from views v_sizing_display, v_experiments_display).
+Differences from the plan below: report-level calculated fields (Churn rate, Left via cancel, Left silently, Subscribers, TWD lost per year, Revenue per subscriber 12m, Band order) replace per-chart aggregation; Looker's default colours, not Wada #247. The steps below remain as the rebuild recipe.
+
 Data is already in BigQuery: project `kkbox-churn-1123fa`, dataset `kkbox` (SQL in `bigquery.sql`).
 Open the link in `create_report_url.txt`. It creates a new report with all four data sources connected:
 `v_dashboard` (one row per subscriber), `payment_methods`, `sizing`, `experiment_sizes`.
